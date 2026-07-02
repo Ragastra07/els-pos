@@ -2,6 +2,7 @@
 namespace App\Controllers;
 
 use App\Controllers\BaseController;
+use App\Models\CategoryModel;
 use App\Models\ProductModel;
 use App\Models\SaleItemModel;
 use App\Models\SaleModel;
@@ -22,6 +23,30 @@ class SaleController extends BaseController
         return view('sales/index', [
             'title' => 'Riwayat Transaksi - ELS POS Simple',
             'sales' => $sales,
+        ]);
+    }
+
+    // Show the experimental cashier mode.
+    public function cashier()
+    {
+        $productModel  = new ProductModel();
+        $categoryModel = new CategoryModel();
+
+        $products = $productModel
+            ->select('products.*, categories.name AS category_name')
+            ->join('categories', 'categories.id = products.category_id', 'left')
+            ->where('products.stock >', 0)
+            ->orderBy('products.name', 'ASC')
+            ->findAll();
+
+        $categories = $categoryModel
+            ->orderBy('name', 'ASC')
+            ->findAll();
+
+        return view('sales/cashier', [
+            'title'      => 'Mode Kasir - ELS POS Simple',
+            'products'   => $products,
+            'categories' => $categories,
         ]);
     }
 
@@ -214,6 +239,36 @@ class SaleController extends BaseController
 
         return view('sales/show', [
             'title' => 'Detail Transaksi - ELS POS Simple',
+            'sale'  => $sale,
+            'items' => $items,
+        ]);
+    }
+
+    // Show a printable receipt for a completed sale transaction.
+    public function receipt($id)
+    {
+        $saleModel     = new SaleModel();
+        $saleItemModel = new SaleItemModel();
+
+        $sale = $saleModel
+            ->select('sales.*, users.name AS cashier_name')
+            ->join('users', 'users.id = sales.user_id', 'left')
+            ->where('sales.id', $id)
+            ->first();
+
+        if (! $sale) {
+            return redirect()->to('/sales')
+                ->with('error', 'Transaksi tidak ditemukan.');
+        }
+
+        $items = $saleItemModel
+            ->select('sale_items.*, products.product_code, products.name AS product_name')
+            ->join('products', 'products.id = sale_items.product_id', 'left')
+            ->where('sale_items.sale_id', $id)
+            ->findAll();
+
+        return view('sales/receipt', [
+            'title' => 'Nota Penjualan - ELS POS Simple',
             'sale'  => $sale,
             'items' => $items,
         ]);

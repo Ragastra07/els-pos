@@ -1,0 +1,142 @@
+html,
+body {
+    height: 100%;
+}
+
+body {
+    overflow: hidden;
+    background: #f3f4f6;
+}
+
+.cashier-shell {
+    height: calc(100vh - 56px);
+    overflow: hidden;
+}
+
+.cashier-grid {
+    height: calc(100vh - 56px);
+    display: grid;
+    grid-template-columns: minmax(340px, 38%) minmax(0, 1fr);
+    gap: 12px;
+    padding: 12px;
+    overflow: hidden;
+}
+
+.order-panel,
+.product-panel {
+    height: 100%;
+    min-height: 0;
+    background: #fff;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.order-panel {
+    display: flex;
+    flex-direction: column;
+}
+
+.cart-list {
+    flex: 1 1 auto;
+    min-height: 120px;
+    overflow-y: auto;
+}
+
+.cart-item {
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    cursor: pointer;
+    transition:
+        border-color 0.15s ease,
+        background-color 0.15s ease;
+}
+
+.cart-item.active {
+    border-color: #0d6efd;
+    background: #eef5ff;
+}
+
+.numpad-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+}
+
+.numpad-grid .btn {
+    min-height: 46px;
+    font-weight: 700;
+}
+
+.product-panel {
+    display: flex;
+    flex-direction: column;
+}
+
+.category-strip {
+    overflow-x: auto;
+    white-space: nowrap;
+}
+
+.product-grid {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 12px;
+    align-content: start;
+}
+
+.product-card {
+    min-height: 158px;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    background: #fff;
+    text-align: left;
+    transition:
+        border-color 0.15s ease,
+        box-shadow 0.15s ease,
+        transform 0.15s ease;
+}
+
+.product-card:hover {
+    border-color: #0d6efd;
+    box-shadow: 0 0.35rem 1rem rgba(13, 110, 253, 0.12);
+    transform: translateY(-1px);
+}
+
+.product-card[disabled] {
+    opacity: 0.55;
+    cursor: not-allowed;
+    transform: none;
+}
+
+@media (max-width: 991.98px) {
+    body {
+        overflow: auto;
+    }
+
+    .cashier-shell {
+        height: auto;
+        overflow: visible;
+    }
+
+    .cashier-grid {
+        height: auto;
+        grid-template-columns: 1fr;
+        overflow: visible;
+    }
+
+    .order-panel,
+    .product-panel {
+        height: auto;
+        min-height: 520px;
+        overflow: visible;
+    }
+
+    .cart-list,
+    .product-grid {
+        overflow-y: visible;
+    }
+}

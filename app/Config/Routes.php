@@ -24,8 +24,10 @@ $routes->group('', ['filter' => 'auth'], static function ($routes) {
 
     // Sales transaction routes.
     $routes->get('/sales', 'SaleController::index');
+    $routes->get('/sales/cashier', 'SaleController::cashier');
     $routes->get('/sales/create', 'SaleController::create');
     $routes->post('/sales/store', 'SaleController::store');
+    $routes->get('/sales/receipt/(:num)', 'SaleController::receipt/$1');
     // Route to show details of a specific sale by its ID. request parameter (:num) is used to capture the sale ID from the URL.
     $routes->get('/sales/show/(:num)', 'SaleController::show/$1');
 });

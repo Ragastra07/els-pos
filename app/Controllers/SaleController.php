@@ -103,7 +103,7 @@ class SaleController extends BaseController
             }
 
             $product = $productModel->find($productId);
-        
+
             if (! $product) {
                 return redirect()
                     ->back()
@@ -159,12 +159,12 @@ class SaleController extends BaseController
                 ->with('error', 'Nominal pembayaran kurang dari total transaksi.');
         }
 
-        $db = \Config\Database::connect();
+        $db  = \Config\Database::connect();
         $db->transStart();
 
         $invoiceNumber = $this->generateInvoiceNumber();
 
-        $saleData  = [
+        $saleData = [
             'user_id'        => session()->get('user_id'),
             'invoice_number' => $invoiceNumber,
             'customer_name'  => $customerName,
@@ -244,7 +244,16 @@ class SaleController extends BaseController
 
     private function generateInvoiceNumber()
     {
-        // Generate simple invoice number based on current date and time.
-        return 'INV-' . date('Ymd-His');
+        $saleModel = new SaleModel();
+        // Generate a unique invoice number based on the current date and time, with a random component to reduce the chance of collisions.
+        do {
+            $invoiceNumber = 'INV-' . date('Ymd-His') . '-' . random_int(1000, 9999);
+            // Check if the generated invoice number already exists in the database.
+            $exists = $saleModel
+                ->where('invoice_number', $invoiceNumber)
+                ->first();
+        } while ($exists);
+
+        return $invoiceNumber;
     }
 }

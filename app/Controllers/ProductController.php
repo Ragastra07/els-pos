@@ -9,12 +9,6 @@ class ProductController extends BaseController
 {
     public function index()
     {
-        // Simple route protection to prevent unauthenticated access.
-        if (!session()->get('isLoggedIn')) {
-            return redirect()->to('/login')
-                ->with('error', 'Silakan login terlebih dahulu.');
-        }
-
         $productModel = new ProductModel();
 
         // Get product data with its category name using a database join.

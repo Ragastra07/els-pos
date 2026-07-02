@@ -35,6 +35,8 @@
                     <?php endif; ?>
 
                     <form action="<?php echo base_url('/login') ?>" method="post">
+                        <!-- CSRF Token -->
+                    <?php echo csrf_field() ?>
                         <div class="mb-3">
                             <label for="username" class="form-label">Username</label>
                             <input

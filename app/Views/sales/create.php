@@ -19,16 +19,18 @@
 <?php if (session()->getFlashdata('error')): ?>
     <div class="alert alert-danger">
         <?php echo session()->getFlashdata('error') ?>
-        <button 
-            type="button" 
-            class="btn-close" 
-            data-bs-dismiss="alert" 
+        <button
+            type="button"
+            class="btn-close"
+            data-bs-dismiss="alert"
             aria-label="Close">
         </button>
     </div>
 <?php endif; ?>
 
 <form action="<?php echo base_url('/sales/store') ?>" method="post">
+<!-- CSRF Token -->
+<?php echo csrf_field() ?>
     <div class="card border-0 shadow-sm mb-3">
         <div class="card-body">
 

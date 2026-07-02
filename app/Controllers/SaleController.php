@@ -10,12 +10,6 @@ class SaleController extends BaseController
 {
     public function index()
     {
-        // Simple route protection to prevent unauthenticated access.
-        if (! session()->get('isLoggedIn')) {
-            return redirect()->to('/login')
-                ->with('error', 'Silakan login terlebih dahulu.');
-        }
-
         $saleModel = new SaleModel();
 
         // Get sales data with cashier/user name.
@@ -34,12 +28,6 @@ class SaleController extends BaseController
     // Show the form to create a new sale transaction.
     public function create()
     {
-        // Simple route protection to prevent unauthenticated access.
-        if (! session()->get('isLoggedIn')) {
-            return redirect()->to('/login')
-                ->with('error', 'Silakan login terlebih dahulu.');
-        }
-
         $productModel = new ProductModel();
 
         // Only show products that still have stock.
@@ -57,40 +45,42 @@ class SaleController extends BaseController
     // Handle the submission of a new sale transaction.
     public function store()
     {
-        // Simple route protection to prevent unauthenticated access.
-        if (! session()->get('isLoggedIn')) {
-            return redirect()->to('/login')
-                ->with('error', 'Silakan login terlebih dahulu.');
-        }
-
-        $productIds   = $this->request->getPost('product_id');
-        $quantities   = $this->request->getPost('qty');
-        $customerName = $this->request->getPost('customer_name') ?: 'Umum';
-        $paidAmount   = (float) $this->request->getPost('paid_amount');
-
-        if (empty($productIds) || empty($quantities)) {
-            return redirect()->back()
-                ->withInput()
-                ->with('error', 'Minimal satu produk harus dipilih.');
-        }
-
         $productModel  = new ProductModel();
         $saleModel     = new SaleModel();
         $saleItemModel = new SaleItemModel();
 
-        $items       = [];
-        $totalAmount = 0;
+        $productIds   = $this->request->getPost('product_id') ?? [];
+        $quantities   = $this->request->getPost('qty') ?? [];
+        $customerName = trim((string) $this->request->getPost('customer_name'));
+        $paidAmount   = (float) $this->request->getPost('paid_amount');
 
-        // Validate selected products and calculate transaction total.
+        if ($customerName === '') {
+            $customerName = 'Umum';
+        }
+
+        if (! is_array($productIds) || ! is_array($quantities)) {
+            return redirect()
+                ->back()
+                ->withInput()
+                ->with('error', 'Data produk tidak valid.');
+        }
+
+        $items = [];
+
+        // Build transaction items and merge duplicate products.
+        // If the same product is selected more than once, the quantities will be combined first.
         foreach ($productIds as $index => $productId) {
-            if (empty($productId)) {
+            // Skip empty product IDs (in case of empty selections).
+            if ($productId === '' || $productId === null) {
                 continue;
             }
 
-            $qty = (int) ($quantities[$index] ?? 0);
+            $productId = (int) $productId;
+            $qty       = isset($quantities[$index]) ? (int) $quantities[$index] : 0;
 
             if ($qty <= 0) {
-                return redirect()->back()
+                return redirect()
+                    ->back()
                     ->withInput()
                     ->with('error', 'Jumlah produk harus lebih dari 0.');
             }
@@ -98,51 +88,65 @@ class SaleController extends BaseController
             $product = $productModel->find($productId);
 
             if (! $product) {
-                return redirect()->back()
+                return redirect()
+                    ->back()
                     ->withInput()
                     ->with('error', 'Produk tidak ditemukan.');
             }
-
-            if ($product['stock'] < $qty) {
-                return redirect()->back()
-                    ->withInput()
-                    ->with('error', 'Stok produk ' . $product['name'] . ' tidak mencukupi.');
+            // If the product is already in the items array, we will merge the quantities.
+            if (! isset($items[$productId])) {
+                $items[$productId] = [
+                    'product' => $product,
+                    'qty'     => 0,
+                    'price'   => (float) $product['selling_price'],
+                ];
             }
-
-            $price    = (float) $product['selling_price'];
-            $subtotal = $price * $qty;
-
-            $items[] = [
-                'product'  => $product,
-                'qty'      => $qty,
-                'price'    => $price,
-                'subtotal' => $subtotal,
-            ];
-
-            $totalAmount += $subtotal;
+            // Merge quantities for duplicate products.
+            $items[$productId]['qty'] += $qty;
         }
 
         if (empty($items)) {
-            return redirect()->back()
+            return redirect()
+                ->back()
                 ->withInput()
-                ->with('error', 'Minimal satu produk harus dipilih.');
+                ->with('error', 'Pilih minimal satu produk.');
         }
 
+        $totalAmount = 0;
+
+        // Validate stock after duplicate products have been merged.
+        foreach ($items as $productId => &$item) {
+            $availableStock = (int) $item['product']['stock'];
+            $requestedQty   = (int) $item['qty'];
+            // Check if the requested quantity exceeds the available stock.
+            if ($requestedQty > $availableStock) {
+                return redirect()
+                    ->back()
+                    ->withInput()
+                    ->with(
+                        'error',
+                        'Stok produk "' . $item['product']['name'] . '" tidak mencukupi. Stok tersedia: ' . $availableStock . ', jumlah diminta: ' . $requestedQty . '.'
+                    );
+            }
+            // Calculate subtotal for each item and accumulate the total amount.
+            $item['subtotal']  = $requestedQty * $item['price'];
+            $totalAmount      += $item['subtotal'];
+        }
+
+        unset($item);
+
         if ($paidAmount < $totalAmount) {
-            return redirect()->back()
+            return redirect()
+                ->back()
                 ->withInput()
                 ->with('error', 'Nominal pembayaran kurang dari total transaksi.');
         }
 
-        $db = \Config\Database::connect();
-
-        // Use database transaction so all sales data is saved safely.
-        // If one process fails, all changes will be rolled back.
+        $db  = \Config\Database::connect();
         $db->transStart();
 
         $invoiceNumber = $this->generateInvoiceNumber();
 
-        // Prepare sale data to be saved in the sales table.
         $saleData = [
             'user_id'        => session()->get('user_id'),
             'invoice_number' => $invoiceNumber,
@@ -152,50 +156,42 @@ class SaleController extends BaseController
             'change_amount'  => $paidAmount - $totalAmount,
             'sale_date'      => date('Y-m-d H:i:s'),
         ];
-        // Save the sale transaction and get its ID for saving sale items.
+
         $saleModel->insert($saleData);
         $saleId = $saleModel->getInsertID();
 
-        // Save each sale item and reduce product stock accordingly.
-        foreach ($items as $item) {
-            $product = $item['product'];
-
+        foreach ($items as $productId => $item) {
             $saleItemModel->insert([
                 'sale_id'    => $saleId,
-                'product_id' => $product['id'],
+                'product_id' => $productId,
                 'qty'        => $item['qty'],
                 'price'      => $item['price'],
                 'subtotal'   => $item['subtotal'],
             ]);
 
-            // Reduce product stock after the sale is saved.
-            $productModel->update($product['id'], [
-                'stock' => $product['stock'] - $item['qty'],
+            $newStock = (int) $item['product']['stock'] - (int) $item['qty'];
+
+            $productModel->update($productId, [
+                'stock' => $newStock,
             ]);
         }
 
         $db->transComplete();
 
-        // Check if the transaction was successful. If not, redirect back with an error message.
         if (! $db->transStatus()) {
-            return redirect()->back()
+            return redirect()
+                ->back()
                 ->withInput()
                 ->with('error', 'Transaksi gagal disimpan.');
         }
 
-        return redirect()->to('/sales/show/' . $saleId)
+        return redirect()
+            ->to('/sales/show/' . $saleId)
             ->with('success', 'Transaksi berhasil disimpan.');
     }
-
     // Show the details of a specific sale transaction.
     public function show($id)
     {
-        // Simple route protection to prevent unauthenticated access.
-        if (! session()->get('isLoggedIn')) {
-            return redirect()->to('/login')
-                ->with('error', 'Silakan login terlebih dahulu.');
-        }
-
         $saleModel     = new SaleModel();
         $saleItemModel = new SaleItemModel();
 
@@ -225,7 +221,16 @@ class SaleController extends BaseController
 
     private function generateInvoiceNumber()
     {
-        // Generate simple invoice number based on current date and time.
-        return 'INV-' . date('Ymd-His');
+        $saleModel = new SaleModel();
+        // Generate a unique invoice number based on the current date and time, with a random component to reduce the chance of collisions.
+        do {
+            $invoiceNumber = 'INV-' . date('Ymd-His') . '-' . random_int(1000, 9999);
+            // Check if the generated invoice number already exists in the database.
+            $exists = $saleModel
+                ->where('invoice_number', $invoiceNumber)
+                ->first();
+        } while ($exists);
+
+        return $invoiceNumber;
     }
 }

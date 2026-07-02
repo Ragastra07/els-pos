@@ -27,4 +27,4 @@ $routes->post('/sales/store', 'SaleController::store');
 $routes->get('/sales/show/(:num)', 'SaleController::show/$1');
 
 // for testing database purposes only
-$routes->get('/db-test', 'Home::dbTest');
+

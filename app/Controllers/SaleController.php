@@ -10,12 +10,6 @@ class SaleController extends BaseController
 {
     public function index()
     {
-        // Simple route protection to prevent unauthenticated access.
-        if (! session()->get('isLoggedIn')) {
-            return redirect()->to('/login')
-                ->with('error', 'Silakan login terlebih dahulu.');
-        }
-
         $saleModel = new SaleModel();
 
         // Get sales data with cashier/user name.
@@ -34,12 +28,6 @@ class SaleController extends BaseController
     // Show the form to create a new sale transaction.
     public function create()
     {
-        // Simple route protection to prevent unauthenticated access.
-        if (! session()->get('isLoggedIn')) {
-            return redirect()->to('/login')
-                ->with('error', 'Silakan login terlebih dahulu.');
-        }
-
         $productModel = new ProductModel();
 
         // Only show products that still have stock.
@@ -57,11 +45,6 @@ class SaleController extends BaseController
     // Handle the submission of a new sale transaction.
     public function store()
     {
-        // Protect this action. Only logged-in users can store sales transactions.
-        if (! session()->get('isLoggedIn')) {
-            return redirect()->to('/login')->with('error', 'Silakan login terlebih dahulu.');
-        }
-
         $productModel  = new ProductModel();
         $saleModel     = new SaleModel();
         $saleItemModel = new SaleItemModel();
@@ -209,12 +192,6 @@ class SaleController extends BaseController
     // Show the details of a specific sale transaction.
     public function show($id)
     {
-        // Simple route protection to prevent unauthenticated access.
-        if (! session()->get('isLoggedIn')) {
-            return redirect()->to('/login')
-                ->with('error', 'Silakan login terlebih dahulu.');
-        }
-
         $saleModel     = new SaleModel();
         $saleItemModel = new SaleItemModel();
 

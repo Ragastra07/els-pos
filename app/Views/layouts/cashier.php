@@ -8,22 +8,6 @@
         href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
         rel="stylesheet"
     >
-    <style>
-        html,
-        body {
-            height: 100%;
-        }
-
-        body {
-            overflow: hidden;
-            background: #f3f4f6;
-        }
-
-        .cashier-shell {
-            height: calc(100vh - 56px);
-            overflow: hidden;
-        }
-    </style>
 </head>
 <body>
 <nav class="navbar navbar-expand-lg navbar-dark bg-primary">

@@ -613,6 +613,88 @@
         });
     }
 
+    function isPaymentModeActive() {
+        return ! paymentMode.classList.contains('d-none');
+    }
+
+    function isTypingTarget(target) {
+        const tagName = target.tagName ? target.tagName.toLowerCase() : '';
+
+        return target.isContentEditable || ['input', 'select', 'textarea'].includes(tagName);
+    }
+
+    document.addEventListener('keydown', function(event) {
+        if (isTypingTarget(event.target)) {
+            return;
+        }
+
+        const numberKey = event.key.length === 1 && event.key >= '0' && event.key <= '9'
+            ? event.key
+            : null;
+        const paymentActive = isPaymentModeActive();
+
+        if (numberKey !== null) {
+            event.preventDefault();
+
+            if (paymentActive) {
+                handlePaymentNumpad({ dataset: { key: numberKey } });
+            } else {
+                handleCartNumpad({ dataset: { key: numberKey } });
+            }
+
+            return;
+        }
+
+        if (event.key === 'Backspace') {
+            event.preventDefault();
+
+            if (paymentActive) {
+                handlePaymentNumpad({ dataset: { action: 'backspace' } });
+            } else {
+                handleCartNumpad({ dataset: { action: 'backspace' } });
+            }
+
+            return;
+        }
+
+        if (event.key === 'Delete' || event.key === 'Escape') {
+            event.preventDefault();
+
+            if (paymentActive) {
+                handlePaymentNumpad({ dataset: { action: 'clear' } });
+            } else {
+                handleCartNumpad({ dataset: { action: 'clear' } });
+            }
+
+            return;
+        }
+
+        if (event.key === 'Enter') {
+            event.preventDefault();
+
+            if (paymentActive) {
+                if (cart.size > 0 && Number(paidBuffer || 0) >= getTotal()) {
+                    submitTransaction();
+                }
+            } else if (cart.size > 0) {
+                showPaymentMode();
+            }
+
+            return;
+        }
+
+        if (! paymentActive && (event.key === '+' || event.code === 'NumpadAdd')) {
+            event.preventDefault();
+            handleCartNumpad({ dataset: { action: 'plus' } });
+            return;
+        }
+
+        if (! paymentActive && (event.key === '-' || event.code === 'NumpadSubtract')) {
+            event.preventDefault();
+            handleCartNumpad({ dataset: { action: 'minus' } });
+        }
+    });
+
     document.getElementById('product-grid').addEventListener('click', function(event) {
         const card = event.target.closest('.product-card');
 

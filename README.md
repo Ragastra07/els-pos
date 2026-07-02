@@ -25,12 +25,60 @@ Aplikasi ini dibuat menggunakan CodeIgniter 4, MariaDB/MySQL, Bootstrap 5, dan J
 - Detail transaksi penjualan
 - Pengurangan stok produk otomatis setelah transaksi berhasil disimpan
 
-## Akun Demo
+## Akun Login Aplikasi
+
+Gunakan akun berikut untuk login ke aplikasi:
 
 ```text
 Username: admin
 Password: admin123
 ```
+
+Password pada database sudah disimpan dalam bentuk hash, bukan plain text.
+
+## Konfigurasi Database Aplikasi
+
+Aplikasi menggunakan konfigurasi database berikut:
+
+```text
+Database Name : els_pos
+Database User : els_user
+Database Pass : els_password
+Host          : localhost
+Port          : 3306
+Driver        : MySQLi
+```
+
+Konfigurasi tersebut digunakan pada file `.env`:
+
+```ini
+database.default.hostname = localhost
+database.default.database = els_pos
+database.default.username = els_user
+database.default.password = els_password
+database.default.DBDriver = MySQLi
+database.default.DBPrefix =
+database.default.port = 3306
+```
+
+## File Database
+
+File export database tersedia di root project:
+
+```text
+els_pos.sql
+```
+
+File tersebut sudah berisi:
+
+- `CREATE DATABASE`
+- `USE els_pos`
+- Struktur tabel
+- Data awal user admin
+- Data awal kategori
+- Data awal produk
+
+Data transaksi pada tabel `sales` dan `sale_items` dikosongkan agar database awal tetap bersih.
 
 ## Struktur Database
 
@@ -128,27 +176,12 @@ sales       -> sale_items
 products    -> sale_items
 ```
 
-## Alur Aplikasi
-
-1. User membuka aplikasi.
-2. User login menggunakan username dan password.
-3. Jika login berhasil, user masuk ke dashboard.
-4. User dapat melihat daftar produk.
-5. User membuat transaksi penjualan baru.
-6. User memilih produk dan mengisi jumlah pembelian.
-7. Sistem menghitung subtotal, total, pembayaran, dan kembalian.
-8. User menyimpan transaksi.
-9. Sistem menyimpan data utama transaksi ke tabel `sales`.
-10. Sistem menyimpan detail produk ke tabel `sale_items`.
-11. Sistem mengurangi stok produk secara otomatis.
-12. User dapat melihat detail dan riwayat transaksi.
-
 ## Cara Instalasi
 
 Clone repository:
 
 ```bash
-git clone <URL_REPOSITORY>
+git clone https://github.com/Ragastra07/els-pos.git
 cd els-pos
 ```
 
@@ -172,6 +205,26 @@ CI_ENVIRONMENT = development
 app.baseURL = 'http://localhost:8080/'
 ```
 
+## Setup Database
+
+Import database menggunakan user root atau user database yang memiliki privilege untuk membuat database:
+
+```bash
+mysql -u root -p < els_pos.sql
+```
+
+File `els_pos.sql` sudah membuat database `els_pos`, sehingga tidak perlu membuat database secara manual terlebih dahulu jika import menggunakan user yang memiliki privilege `CREATE DATABASE`.
+
+Setelah database berhasil di-import, buat user database untuk aplikasi:
+
+```sql
+CREATE USER IF NOT EXISTS 'els_user'@'localhost' IDENTIFIED BY 'els_password';
+
+GRANT ALL PRIVILEGES ON els_pos.* TO 'els_user'@'localhost';
+
+FLUSH PRIVILEGES;
+```
+
 Atur konfigurasi database pada file `.env`:
 
 ```ini
@@ -182,18 +235,6 @@ database.default.password = els_password
 database.default.DBDriver = MySQLi
 database.default.DBPrefix =
 database.default.port = 3306
-```
-
-Import database:
-
-```bash
-mysql -u els_user -p < database/els_pos.sql
-```
-
-Masukkan password database:
-
-```text
-els_password
 ```
 
 Jalankan aplikasi:
@@ -262,6 +303,33 @@ Detail transaksi berisi:
 ### 5. Lihat Riwayat Transaksi
 
 Buka menu `Riwayat Transaksi` untuk melihat daftar transaksi yang sudah tersimpan.
+
+### 6. Cek Stok Produk
+
+Setelah transaksi berhasil disimpan, stok produk otomatis berkurang sesuai jumlah produk yang dibeli.
+
+Contoh:
+
+```text
+Stok awal Mouse Logitech M170 : 20
+Qty terjual                   : 2
+Stok akhir                    : 18
+```
+
+## Alur Aplikasi
+
+1. User membuka aplikasi.
+2. User login menggunakan username dan password.
+3. Jika login berhasil, user masuk ke dashboard.
+4. User dapat melihat daftar produk.
+5. User membuat transaksi penjualan baru.
+6. User memilih produk dan mengisi jumlah pembelian.
+7. Sistem menghitung subtotal, total, pembayaran, dan kembalian.
+8. User menyimpan transaksi.
+9. Sistem menyimpan data utama transaksi ke tabel `sales`.
+10. Sistem menyimpan detail produk ke tabel `sale_items`.
+11. Sistem mengurangi stok produk secara otomatis.
+12. User dapat melihat detail dan riwayat transaksi.
 
 ## Catatan Teknis
 
@@ -388,6 +456,20 @@ Beberapa fitur tambahan yang dibuat agar alur POS lebih realistis:
 - Riwayat transaksi
 - Detail transaksi
 - Pengurangan stok otomatis
+
+## Skenario Demo Singkat
+
+Skenario yang dapat digunakan saat presentasi:
+
+1. Login menggunakan akun admin.
+2. Buka halaman produk untuk menunjukkan data produk.
+3. Buka halaman penjualan.
+4. Pilih produk dan isi jumlah pembelian.
+5. Masukkan nominal pembayaran.
+6. Simpan transaksi.
+7. Tampilkan detail transaksi.
+8. Buka riwayat transaksi.
+9. Buka halaman produk untuk menunjukkan stok berkurang.
 
 ## Pengembangan Selanjutnya
 

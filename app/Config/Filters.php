@@ -75,7 +75,7 @@ class Filters extends BaseFilters
     public array $globals = [
         'before' => [
             // 'honeypot',
-            // 'csrf',
+            'csrf', // CSRF protection activated globally for all requests. This is a security measure to prevent Cross-Site Request Forgery attacks.
             // 'invalidchars',
         ],
         'after' => [

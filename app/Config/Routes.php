@@ -19,5 +19,12 @@ $routes->get('/dashboard', 'DashboardController::index');
 // Product routes
 $routes->get('/products', 'ProductController::index');
 
+// Sales transaction routes.
+$routes->get('/sales', 'SaleController::index');
+$routes->get('/sales/create', 'SaleController::create');
+$routes->post('/sales/store', 'SaleController::store');
+// Route to show details of a specific sale by its ID. request parameter (:num) is used to capture the sale ID from the URL.
+$routes->get('/sales/show/(:num)', 'SaleController::show/$1');
+
 // for testing database purposes only
 $routes->get('/db-test', 'Home::dbTest');

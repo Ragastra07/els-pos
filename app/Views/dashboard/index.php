@@ -42,8 +42,13 @@
                 <h6 class="text-muted">Transaksi</h6>
                 <h5>Penjualan</h5>
                 <p class="mb-0 small text-muted">
-                    Menu ini nanti digunakan untuk mencatat transaksi penjualan.
+                    Menu ini digunakan untuk mencatat transaksi penjualan.
                 </p>
+
+                <!-- Link to sales transaction page. -->
+                <a href="<?= base_url('/sales/create') ?>" class="btn btn-primary btn-sm">
+                    Buat Penjualan
+                </a>
             </div>
         </div>
     </div>
@@ -55,8 +60,13 @@
                 <h6 class="text-muted">Riwayat</h6>
                 <h5>Riwayat Transaksi</h5>
                 <p class="mb-0 small text-muted">
-                    Menu ini nanti digunakan untuk melihat transaksi yang sudah tersimpan.
+                    Menu ini digunakan untuk melihat transaksi yang sudah tersimpan.
                 </p>
+
+                <!-- Link to sales history page. -->
+                <a href="<?= base_url('/sales') ?>" class="btn btn-primary btn-sm">
+                    Lihat Riwayat
+                </a>
             </div>
         </div>
     </div>

@@ -19,11 +19,20 @@ Aplikasi ini dibuat menggunakan CodeIgniter 4, MariaDB/MySQL, Bootstrap 5, dan J
 - Logout
 - Dashboard sederhana
 - Daftar produk
-- Pencatatan transaksi penjualan
-- Perhitungan subtotal, total, pembayaran, dan kembalian
+- Pencatatan transaksi penjualan melalui form standar
+- Mode Kasir dengan layout POS interaktif
+- Product grid dengan pencarian dan filter kategori
+- Cart/order panel interaktif
+- Numpad layar dan dukungan keyboard/numpad fisik
+- Payment mode dengan perhitungan total, pembayaran, dan kembalian
 - Riwayat transaksi penjualan
 - Detail transaksi penjualan
+- Cetak nota / simpan nota sebagai PDF melalui browser print dialog
 - Pengurangan stok produk otomatis setelah transaksi berhasil disimpan
+- Proteksi route menggunakan Auth Filter
+- Proteksi form POST menggunakan CSRF
+- Validasi stok pada backend
+- Validasi duplicate product dalam satu transaksi
 
 ## Akun Login Aplikasi
 
@@ -273,7 +282,7 @@ Contoh produk:
 - Flashdisk 32GB
 - Printer Canon Inkjet
 
-### 3. Buat Transaksi Penjualan
+### 3. Buat Transaksi Penjualan Melalui Form Standar
 
 Buka menu `Penjualan`, lalu:
 
@@ -285,7 +294,52 @@ Buka menu `Penjualan`, lalu:
 6. Sistem akan menghitung kembalian.
 7. Klik tombol `Simpan Transaksi`.
 
-### 4. Lihat Detail Transaksi
+### 4. Buat Transaksi Melalui Mode Kasir
+
+Selain form transaksi standar, aplikasi juga menyediakan fitur `Mode Kasir` agar proses penjualan lebih cepat dan lebih mirip dengan alur penggunaan POS retail.
+
+Mode Kasir dapat diakses melalui menu:
+
+```text
+Mode Kasir
+```
+
+atau melalui URL:
+
+```text
+/sales/cashier
+```
+
+Fitur pada Mode Kasir:
+
+- Product grid untuk memilih produk dengan cepat
+- Search produk berdasarkan kode, nama, atau kategori
+- Filter produk berdasarkan kategori
+- Cart/order panel untuk melihat item transaksi
+- Klik produk untuk memasukkan produk ke cart
+- Klik produk yang sama untuk menambah qty
+- Numpad layar untuk mengubah qty atau nominal pembayaran
+- Dukungan keyboard/numpad fisik
+- Payment mode untuk proses pembayaran
+- Tombol `Uang Pas`
+- Tombol `Lunas` untuk menyimpan transaksi
+
+Alur Mode Kasir:
+
+1. User membuka halaman Mode Kasir.
+2. User memilih produk dari product grid.
+3. Produk masuk ke cart.
+4. Jika produk yang sama dipilih lagi, qty akan bertambah.
+5. User dapat mengubah qty melalui numpad.
+6. User klik tombol `Bayar`.
+7. User masuk ke payment mode.
+8. User mengisi nominal pembayaran atau klik `Uang Pas`.
+9. User klik `Lunas`.
+10. Sistem menyimpan transaksi ke database.
+11. Sistem mengurangi stok produk.
+12. User diarahkan ke halaman detail transaksi.
+
+### 5. Lihat Detail Transaksi
 
 Setelah transaksi berhasil disimpan, aplikasi akan menampilkan halaman detail transaksi.
 
@@ -300,11 +354,31 @@ Detail transaksi berisi:
 - Kembalian
 - Daftar produk yang dibeli
 
-### 5. Lihat Riwayat Transaksi
+### 6. Cetak / Simpan PDF Nota
+
+Pada halaman detail transaksi tersedia tombol:
+
+```text
+Cetak / Simpan PDF Nota
+```
+
+Tombol tersebut akan membuka halaman nota sederhana yang dapat dicetak atau disimpan sebagai PDF menggunakan fitur print dari browser.
+
+Alur cetak nota:
+
+1. Buka detail transaksi.
+2. Klik tombol `Cetak / Simpan PDF Nota`.
+3. Halaman nota terbuka di tab baru.
+4. Klik tombol `Print / Save PDF`.
+5. Pilih printer atau pilih `Save as PDF`.
+
+Fitur nota ini belum menggunakan library PDF tambahan. Untuk saat ini, nota dibuat sebagai halaman print-friendly agar tetap sederhana dan ringan.
+
+### 7. Lihat Riwayat Transaksi
 
 Buka menu `Riwayat Transaksi` untuk melihat daftar transaksi yang sudah tersimpan.
 
-### 6. Cek Stok Produk
+### 8. Cek Stok Produk
 
 Setelah transaksi berhasil disimpan, stok produk otomatis berkurang sesuai jumlah produk yang dibeli.
 
@@ -322,7 +396,7 @@ Stok akhir                    : 18
 2. User login menggunakan username dan password.
 3. Jika login berhasil, user masuk ke dashboard.
 4. User dapat melihat daftar produk.
-5. User membuat transaksi penjualan baru.
+5. User dapat membuat transaksi melalui form standar atau Mode Kasir.
 6. User memilih produk dan mengisi jumlah pembelian.
 7. Sistem menghitung subtotal, total, pembayaran, dan kembalian.
 8. User menyimpan transaksi.
@@ -330,8 +404,11 @@ Stok akhir                    : 18
 10. Sistem menyimpan detail produk ke tabel `sale_items`.
 11. Sistem mengurangi stok produk secara otomatis.
 12. User dapat melihat detail dan riwayat transaksi.
+13. User dapat mencetak atau menyimpan nota transaksi sebagai PDF melalui browser.
 
 ## Catatan Teknis
+
+### Database Transaction
 
 Pada proses penyimpanan transaksi penjualan, aplikasi menggunakan database transaction dari CodeIgniter 4.
 
@@ -353,6 +430,47 @@ atau stok produk gagal berkurang.
 
 Dengan database transaction, proses tersebut diperlakukan sebagai satu kesatuan.
 
+### Validasi Duplicate Product
+
+Pada proses transaksi, aplikasi menggabungkan produk yang sama terlebih dahulu sebelum melakukan validasi stok.
+
+Contoh:
+
+```text
+Mouse Logitech M170 qty 2
+Mouse Logitech M170 qty 3
+```
+
+Akan diproses sebagai:
+
+```text
+Mouse Logitech M170 qty 5
+```
+
+Hal ini dilakukan agar validasi stok dihitung berdasarkan total qty produk yang sama dalam satu transaksi, bukan hanya berdasarkan tiap baris input.
+
+### Auth Filter
+
+Aplikasi menggunakan Auth Filter untuk melindungi halaman yang hanya boleh diakses setelah login, seperti:
+
+- Dashboard
+- Produk
+- Penjualan
+- Mode Kasir
+- Riwayat Transaksi
+- Detail Transaksi
+- Nota Transaksi
+
+Jika user belum login dan mengakses halaman tersebut, sistem akan mengarahkan user ke halaman login.
+
+### CSRF Protection
+
+Form POST pada aplikasi sudah menggunakan CSRF protection, termasuk:
+
+- Form login
+- Form transaksi standar
+- Form submit transaksi dari Mode Kasir
+
 ## Struktur Folder Utama
 
 ```text
@@ -362,6 +480,9 @@ app/
 │   ├── DashboardController.php
 │   ├── ProductController.php
 │   └── SaleController.php
+│
+├── Filters/
+│   └── AuthFilter.php
 │
 ├── Models/
 │   ├── UserModel.php
@@ -378,7 +499,8 @@ app/
 │   │   └── index.php
 │   │
 │   ├── layouts/
-│   │   └── main.php
+│   │   ├── main.php
+│   │   └── cashier.php
 │   │
 │   ├── products/
 │   │   └── index.php
@@ -386,7 +508,19 @@ app/
 │   └── sales/
 │       ├── create.php
 │       ├── index.php
-│       └── show.php
+│       ├── show.php
+│       ├── cashier.php
+│       └── receipt.php
+│
+public/
+└── assets/
+    ├── css/
+    │   ├── cashier.css
+    │   └── receipt.css
+    │
+    └── js/
+        ├── cashier.js
+        └── sales-create.js
 ```
 
 ## Controller
@@ -414,8 +548,10 @@ Digunakan untuk menangani proses transaksi penjualan, meliputi:
 
 - Menampilkan riwayat transaksi
 - Menampilkan form transaksi baru
+- Menampilkan Mode Kasir
 - Menyimpan transaksi
 - Menampilkan detail transaksi
+- Menampilkan nota transaksi
 - Mengurangi stok produk
 
 ## Model
@@ -455,7 +591,13 @@ Beberapa fitur tambahan yang dibuat agar alur POS lebih realistis:
 - Daftar produk
 - Riwayat transaksi
 - Detail transaksi
+- Mode Kasir dengan product grid dan cart interaktif
+- Payment mode
+- Numpad layar dan keyboard support
+- Nota penjualan print-friendly
 - Pengurangan stok otomatis
+- Auth Filter
+- CSRF protection
 
 ## Skenario Demo Singkat
 
@@ -463,13 +605,19 @@ Skenario yang dapat digunakan saat presentasi:
 
 1. Login menggunakan akun admin.
 2. Buka halaman produk untuk menunjukkan data produk.
-3. Buka halaman penjualan.
-4. Pilih produk dan isi jumlah pembelian.
-5. Masukkan nominal pembayaran.
-6. Simpan transaksi.
-7. Tampilkan detail transaksi.
-8. Buka riwayat transaksi.
-9. Buka halaman produk untuk menunjukkan stok berkurang.
+3. Buka `Mode Kasir`.
+4. Pilih produk dari product grid.
+5. Tunjukkan produk masuk ke cart.
+6. Tambahkan produk yang sama untuk menunjukkan qty bertambah.
+7. Gunakan numpad layar atau keyboard untuk mengubah qty.
+8. Klik tombol `Bayar`.
+9. Klik `Uang Pas` atau isi nominal pembayaran.
+10. Klik `Lunas`.
+11. Tampilkan detail transaksi.
+12. Klik tombol `Cetak / Simpan PDF Nota`.
+13. Tampilkan halaman nota penjualan.
+14. Buka riwayat transaksi.
+15. Buka halaman produk untuk menunjukkan stok berkurang.
 
 ## Pengembangan Selanjutnya
 
@@ -478,12 +626,16 @@ Jika aplikasi dikembangkan lebih lanjut, beberapa fitur yang dapat ditambahkan a
 - CRUD produk lengkap
 - Manajemen user kasir
 - Filter laporan penjualan berdasarkan tanggal
-- Cetak struk
+- Generate PDF nota menggunakan library PDF seperti Dompdf
+- Cetak struk thermal printer
 - Retur barang
 - Manajemen supplier
 - Manajemen pelanggan
 - Export laporan ke PDF atau Excel
 - Dashboard statistik penjualan
+- Migration dan seeder CodeIgniter 4
+- Foreign key antar tabel
+- Automated testing untuk fitur inti
 
 ## Author
 

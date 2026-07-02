@@ -65,6 +65,9 @@
                     Penjualan
                 </a>
 
+                <a href="<?php echo base_url('/sales/cashier') ?>" class="list-group-item list-group-item-action">
+                    Mode Kasir
+                </a>
 
                 <!-- Disabled-looking menu placeholder for sales history feature. -->
                 <a href="<?= base_url('/sales') ?>" class="list-group-item list-group-item-action">

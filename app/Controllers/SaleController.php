@@ -2,6 +2,7 @@
 namespace App\Controllers;
 
 use App\Controllers\BaseController;
+use App\Models\CategoryModel;
 use App\Models\ProductModel;
 use App\Models\SaleItemModel;
 use App\Models\SaleModel;
@@ -22,6 +23,30 @@ class SaleController extends BaseController
         return view('sales/index', [
             'title' => 'Riwayat Transaksi - ELS POS Simple',
             'sales' => $sales,
+        ]);
+    }
+
+    // Show the experimental cashier mode.
+    public function cashier()
+    {
+        $productModel  = new ProductModel();
+        $categoryModel = new CategoryModel();
+
+        $products = $productModel
+            ->select('products.*, categories.name AS category_name')
+            ->join('categories', 'categories.id = products.category_id', 'left')
+            ->where('products.stock >', 0)
+            ->orderBy('products.name', 'ASC')
+            ->findAll();
+
+        $categories = $categoryModel
+            ->orderBy('name', 'ASC')
+            ->findAll();
+
+        return view('sales/cashier', [
+            'title'      => 'Mode Kasir - ELS POS Simple',
+            'products'   => $products,
+            'categories' => $categories,
         ]);
     }
 

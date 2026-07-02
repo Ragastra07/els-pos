@@ -10,9 +10,18 @@
         </p>
     </div>
 
-    <a href="<?= base_url('/sales') ?>" class="btn btn-outline-secondary btn-sm">
-        Kembali
-    </a>
+    <div class="d-flex gap-2">
+        <a
+            href="<?= base_url('/sales/receipt/' . $sale['id']) ?>"
+            class="btn btn-primary btn-sm"
+            target="_blank"
+        >
+            Cetak / Simpan PDF Nota
+        </a>
+        <a href="<?= base_url('/sales') ?>" class="btn btn-outline-secondary btn-sm">
+            Kembali
+        </a>
+    </div>
 </div>
 
 <?php if (session()->getFlashdata('success')) : ?>

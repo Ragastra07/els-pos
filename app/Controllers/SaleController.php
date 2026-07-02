@@ -244,6 +244,36 @@ class SaleController extends BaseController
         ]);
     }
 
+    // Show a printable receipt for a completed sale transaction.
+    public function receipt($id)
+    {
+        $saleModel     = new SaleModel();
+        $saleItemModel = new SaleItemModel();
+
+        $sale = $saleModel
+            ->select('sales.*, users.name AS cashier_name')
+            ->join('users', 'users.id = sales.user_id', 'left')
+            ->where('sales.id', $id)
+            ->first();
+
+        if (! $sale) {
+            return redirect()->to('/sales')
+                ->with('error', 'Transaksi tidak ditemukan.');
+        }
+
+        $items = $saleItemModel
+            ->select('sale_items.*, products.product_code, products.name AS product_name')
+            ->join('products', 'products.id = sale_items.product_id', 'left')
+            ->where('sale_items.sale_id', $id)
+            ->findAll();
+
+        return view('sales/receipt', [
+            'title' => 'Nota Penjualan - ELS POS Simple',
+            'sale'  => $sale,
+            'items' => $items,
+        ]);
+    }
+
     private function generateInvoiceNumber()
     {
         $saleModel = new SaleModel();

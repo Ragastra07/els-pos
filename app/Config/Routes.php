@@ -16,6 +16,8 @@ $routes->get('/logout', 'AuthController::logout');
 // Dashboard route
 $routes->get('/dashboard', 'DashboardController::index');
 
+// Product routes
+$routes->get('/products', 'ProductController::index');
 
 // for testing database purposes only
 $routes->get('/db-test', 'Home::dbTest');
